@@ -1,0 +1,29 @@
+{
+  "name": "youtubedownloadtrimmer",
+  "dockerFile": "Dockerfile",
+  "forwardPorts": [3000, 5173],
+  "mounts": [
+    "source=${localWorkspaceFolder},target=/workspace,type=bind,consistency=cached"
+  ],
+  "customizations": {
+    "vscode": {
+      "settings": {
+        "workbench.colorTheme": "Monokai Pro",
+        "editor.defaultFormatter": "esbenp.prettier-vscode"
+      },
+      "extensions": [
+        "bradlc.vscode-tailwindcss",
+        "austenc.tailwind-docs",
+        "ms-azuretools.vscode-docker",
+        "zh9528.file-size",
+        "christian-kohler.npm-intellisense",
+        "rangav.vscode-thunder-client",
+        "esbenp.prettier-vscode",
+        "burkeholland.simple-react-snippets",
+        "yzhang.markdown-all-in-one",
+        "steoates.autoimport"
+      ]
+    }
+  },
+  "postCreateCommand": "echo done"
+}

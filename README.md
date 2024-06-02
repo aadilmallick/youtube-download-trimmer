@@ -1,15 +1,7 @@
 # youtube-download-trimmer
 
-To install dependencies:
+## Steps
 
-```bash
-bun install
-```
-
-To run:
-
-```bash
-bun run index.ts
-```
-
-This project was created using `bun init` in bun v1.0.7. [Bun](https://bun.sh) is a fast all-in-one JavaScript runtime.
+- [x] create /api/upload route
+- [ ] Create application context. Navigate to new page showing compress video and download video option
+- [ ] Prevent user from leaving page if they have unsaved changes

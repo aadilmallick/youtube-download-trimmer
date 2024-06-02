@@ -1,6 +1,23 @@
 services:
   web:
-    build: .
-    command: ["sh"]
+    build:
+      context: .
+      target: development
     ports:
       - "3000:3000"
+    env_file:
+      - .env
+    # this takes precedence over env_file, so don't override anything.
+    develop:
+      watch:
+        - path: ./package.json
+          action: rebuild
+        - path: ./bun.lockb
+          action: rebuild
+        - path: ./frontend/package.json
+          action: rebuild
+        - path: ./frontend/package-lock.json
+          action: rebuild
+        - path: ./
+          action: sync
+          target: /usr/src/app
