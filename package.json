@@ -1,0 +1,17 @@
+{
+  "name": "youtube-download-trimmer",
+  "module": "index.ts",
+  "type": "module",
+  "devDependencies": {
+    "bun-types": "latest"
+  },
+  "peerDependencies": {
+    "typescript": "^5.0.0"
+  },
+  "dependencies": {
+    "hono": "^4.4.2"
+  },
+  "scripts": {
+    "dev": "NODE_ENV=development bun run --watch index.ts"
+  }
+}
