@@ -29,7 +29,7 @@ function DownloadBlob({ blob }: { blob: Blob }) {
       linkRef.current.click();
     }
   };
-  console.log("blobSliceUrl", url)
+  console.log("blobSliceUrl", url);
 
   return (
     <div>
@@ -135,18 +135,24 @@ const VideoPlayer = ({ blobUrl }: VideoPlayerProps) => {
           videoModel.togglePlay();
           break;
         case "i":
-          // TODO: set inpoint
           markInpoint(
             videoModel.getPlaybackInfo().currentTime,
             videoModel.getPlaybackInfo().duration
           );
           break;
         case "o":
-          // TODO: set outpoint
           markOutpoint(
             videoModel.getPlaybackInfo().currentTime,
             videoModel.getPlaybackInfo().duration
           );
+          break;
+        case "n":
+          // TODO: go to next frame
+          videoModel.nextFrame();
+          break;
+        case "b":
+          // TODO: go back one frame
+          videoModel.previousFrame();
           break;
       }
     }
@@ -194,7 +200,7 @@ const VideoPlayer = ({ blobUrl }: VideoPlayerProps) => {
           <source src={blobUrl} type="video/mp4" />
         </video>
       </div>
-      <div className="inpoint-outpoint-container space-y-4 pb-8">
+      <div className="inpoint-outpoint-container space-y-4">
         <p>Inpoint: {convertPointToNumber(inpoint)}</p>
         <p>Outpoint: {convertPointToNumber(outpoint)}</p>
         <button
@@ -206,6 +212,14 @@ const VideoPlayer = ({ blobUrl }: VideoPlayerProps) => {
         </button>
         {blobSlice && <DownloadBlob blob={blobSlice} />}
         {sliceLoading && <Loader />}
+      </div>
+      <div className="shortcuts pb-8">
+        <p>
+          Press <kbd>n</kbd> to go to next frame
+        </p>
+        <p>
+          Press <kbd>b</kbd> to go to previous frame
+        </p>
       </div>
     </>
   );
@@ -310,7 +324,20 @@ class VideoPlayerModel {
     return {
       duration: this.video.duration,
       currentTime: this.video.currentTime,
+      frameRate: this.frameRate,
     };
+  }
+
+  public nextFrame() {
+    if (this.frameRate) {
+      this.video.currentTime += 1 / this.frameRate;
+    }
+  }
+
+  public previousFrame() {
+    if (this.frameRate) {
+      this.video.currentTime -= 1 / this.frameRate;
+    }
   }
 
   public removeListeners() {
