@@ -18,15 +18,12 @@
     "allowJs": true,
     "types": [
       "bun-types" // add Bun global
-    ],
-    "include": [
-      "index.ts",
-      "testing/**/*.ts",
-      "testing/**/*.tsx",
-      "routes/**/*.ts",
-      "routes/**/*.tsx",
-      "api/**/*.tsx",
-      "api/**/*.ts"
     ]
-  }
+  },
+  "include": [
+    "api/**/*.ts,tsx",
+    "routes/**/*.ts,tsx",
+    "testing/**/*.ts,tsx",
+    "index.ts"
+  ]
 }
