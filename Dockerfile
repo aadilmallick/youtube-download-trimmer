@@ -38,3 +38,6 @@ FROM builder as production
 # 6. run app
 EXPOSE 80
 CMD ["bun", "start"]
+
+
+# keep environment variables secret in env, push to deplyment and then put.

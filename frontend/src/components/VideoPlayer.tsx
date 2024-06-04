@@ -3,6 +3,8 @@ import VolumeControls, { VolumeControlsProps } from "./VolumeControls";
 import Fetcher from "../lib/Fetcher";
 import { toast } from "react-toastify";
 import { Loader } from "./Loader";
+import PlaybackSpeedControls from "./PlaybackSpeedControls";
+import VideoPlayerModel from "./VideoPlayerModel";
 
 interface VideoPlayerProps {
   blobUrl: string;
@@ -57,12 +59,12 @@ const VideoPlayer = ({ blobUrl }: VideoPlayerProps) => {
   const [outpoint, setOutpoint] = React.useState(-1);
   const [sliceLoading, setSliceLoading] = React.useState(false);
   const [blobSlice, setBlobSlice] = React.useState<Blob | null>(null);
+  const [speed, setSpeed] = React.useState(1);
 
   const markInpoint = (currentTime: number, videoDuration: number) => {
     if (currentTime > -1) {
       setInpoint(currentTime);
-    }
-    if (currentTime > outpoint) {
+    } else if (outpoint > -1 && currentTime > outpoint) {
       setInpoint(currentTime);
       setOutpoint(videoDuration);
     } else {
@@ -135,16 +137,20 @@ const VideoPlayer = ({ blobUrl }: VideoPlayerProps) => {
           videoModel.togglePlay();
           break;
         case "i":
+          console.log(inpoint, outpoint);
+
           markInpoint(
             videoModel.getPlaybackInfo().currentTime,
             videoModel.getPlaybackInfo().duration
           );
+
           break;
         case "o":
           markOutpoint(
             videoModel.getPlaybackInfo().currentTime,
             videoModel.getPlaybackInfo().duration
           );
+
           break;
         case "n":
           // TODO: go to next frame
@@ -153,6 +159,12 @@ const VideoPlayer = ({ blobUrl }: VideoPlayerProps) => {
         case "b":
           // TODO: go back one frame
           videoModel.previousFrame();
+          break;
+        case "arrowleft":
+          videoModel.skip(-5);
+          break;
+        case "arrowright":
+          videoModel.skip(5);
           break;
       }
     }
@@ -184,6 +196,14 @@ const VideoPlayer = ({ blobUrl }: VideoPlayerProps) => {
   return (
     <>
       <div className="video-container">
+        <div className="timeline-container">
+          <div className="timeline">
+            <img className="preview-img" />
+            <div className="thumb-indicator"></div>
+            {/* <div className="inpoint-indicator">I</div> */}
+            {/* <div className="outpoint-indicator">O</div> */}
+          </div>
+        </div>
         <div className="video-controls">
           <button data-action="play" className="paused"></button>
           <VolumeControls
@@ -195,6 +215,15 @@ const VideoPlayer = ({ blobUrl }: VideoPlayerProps) => {
             <div className="current-time">0:00</div>/
             <div className="total-time"></div>
           </div>
+          <PlaybackSpeedControls
+            speed={speed}
+            onSpeedChange={(num: number) => {
+              setSpeed(num);
+              if (videoRef.current) {
+                videoRef.current.playbackRate = num;
+              }
+            }}
+          />
         </div>
         <video ref={videoRef}>
           <source src={blobUrl} type="video/mp4" />
@@ -213,7 +242,7 @@ const VideoPlayer = ({ blobUrl }: VideoPlayerProps) => {
         {blobSlice && <DownloadBlob blob={blobSlice} />}
         {sliceLoading && <Loader />}
       </div>
-      <div className="shortcuts pb-8">
+      <div className="shortcuts py-8 max-w-[1000px] mx-auto">
         <p>
           Press <kbd>n</kbd> to go to next frame
         </p>
@@ -224,158 +253,5 @@ const VideoPlayer = ({ blobUrl }: VideoPlayerProps) => {
     </>
   );
 };
-
-class VideoPlayerModel {
-  public videoContainer = document.querySelector(".video-container")!!;
-  public playPauseBtn = this.$("[data-action='play']") as HTMLButtonElement;
-  public muteBtn = this.$(".mute-btn");
-  public currentTimeElement = this.$(".current-time");
-  public totalTimeElement = this.$(".total-time");
-  private listenersToUnload: (() => void)[] = [];
-  private _isMuted: boolean = false;
-  private frameRate!: number | null;
-
-  public get isMuted() {
-    return this._isMuted;
-  }
-
-  public get volume() {
-    return this.video.volume;
-  }
-  // private set
-  constructor(private video: HTMLVideoElement) {
-    this.playPauseBtn.textContent = "▶";
-    this.assignEventListener("click", this.playPauseBtn, () => {
-      this.togglePlay();
-    });
-    this.assignEventListener("click", this.video, () => {
-      this.togglePlay();
-    });
-    this.assignVideoEventListener("loadeddata", () => {
-      this.totalTimeElement.textContent = VideoPlayerModel.formatTimestamp(
-        this.video.duration
-      );
-    });
-    this.assignVideoEventListener("timeupdate", () => {
-      this.currentTimeElement.textContent = VideoPlayerModel.formatTimestamp(
-        this.video.currentTime
-      );
-    });
-    (async () => {
-      this.frameRate = await this.getFramerate();
-    })();
-  }
-
-  private async getFramerate() {
-    const data = await Fetcher.getFramerateOfVideo();
-    if (data.success === true) {
-      return data.frameRate;
-    } else {
-      return null;
-    }
-  }
-
-  public togglePlay() {
-    this.video.paused ? this.video.play() : this.video.pause();
-    this.video.paused
-      ? (this.playPauseBtn.textContent = "▶")
-      : (this.playPauseBtn.textContent = "❚❚");
-  }
-
-  public toggleMute() {
-    this.video.muted = !this.video.muted;
-    if (this.video.volume === 0) {
-      this.setMuted(true);
-    }
-    this._isMuted = this.video.muted;
-    // console.groupCollapsed("toggleMute");
-    // console.log("video.muted", this.video.muted);
-    // console.log("isMuted", this._isMuted);
-    // console.log("volume", this.video.volume);
-    // console.groupEnd();
-  }
-  public setMuted(isMuted: boolean) {
-    this.video.muted = isMuted;
-    this._isMuted = isMuted;
-  }
-
-  public assignVideoEventListener(
-    event: keyof HTMLVideoElementEventMap,
-    func: () => void
-  ) {
-    this.video.addEventListener(event, func);
-    this.listenersToUnload.push(() => {
-      this.video.removeEventListener(event, func);
-    });
-  }
-
-  public assignEventListener(
-    event: string,
-    element: Element,
-    func: () => void
-  ) {
-    element.addEventListener(event, func);
-    this.listenersToUnload.push(() => {
-      element.removeEventListener(event, func);
-    });
-  }
-
-  public getPlaybackInfo() {
-    return {
-      duration: this.video.duration,
-      currentTime: this.video.currentTime,
-      frameRate: this.frameRate,
-    };
-  }
-
-  public nextFrame() {
-    if (this.frameRate) {
-      this.video.currentTime += 1 / this.frameRate;
-    }
-  }
-
-  public previousFrame() {
-    if (this.frameRate) {
-      this.video.currentTime -= 1 / this.frameRate;
-    }
-  }
-
-  public removeListeners() {
-    this.listenersToUnload.forEach((unload) => unload());
-  }
-
-  private $(selector: string) {
-    return this.videoContainer.querySelector(selector)!!;
-  }
-
-  public static formatTimestamp(seconds: number, withMillis = false) {
-    if (!withMillis) {
-      const pad = (num: number) => String(num).padStart(2, "0");
-      const preparedSeconds = Math.round(seconds);
-      const hours = Math.floor(preparedSeconds / 3600);
-      const minutes = Math.floor((preparedSeconds % 3600) / 60);
-      const secs = preparedSeconds % 60;
-
-      if (hours > 0) {
-        return `${hours}:${pad(minutes)}:${pad(secs)}`;
-      } else {
-        return `${minutes}:${pad(secs)}`;
-      }
-    } else {
-      const pad = (num: number, size = 2) => String(num).padStart(size, "0");
-      const milliseconds = Math.floor((seconds % 1) * 1000);
-      const totalSeconds = Math.floor(seconds);
-      const hours = Math.floor(totalSeconds / 3600);
-      const minutes = Math.floor((totalSeconds % 3600) / 60);
-      const secs = totalSeconds % 60;
-
-      if (hours > 0) {
-        return `${hours}:${pad(minutes)}:${pad(secs)}.${pad(milliseconds, 3)}`;
-      } else {
-        return `${minutes}:${pad(secs)}.${pad(milliseconds, 3)}`;
-      }
-    }
-  }
-}
 
 export default VideoPlayer;

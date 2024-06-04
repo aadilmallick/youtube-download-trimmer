@@ -57,6 +57,9 @@
   .video-controls {
     opacity: 1;
   }
+  .timeline-container {
+    opacity: 1;
+  }
 }
 
 .volume-container {
@@ -127,4 +130,91 @@
   width: 90%;
   margin: 0 auto;
   padding-top: 5rem;
+}
+
+.playback-speed-container {
+  width: 50px !important;
+}
+
+.timeline-container {
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  position: absolute;
+  z-index: 500;
+  left: 0;
+  bottom: 3rem;
+  width: 97.5%;
+  margin-inline: 0.8rem;
+  opacity: 0;
+  transition: opacity 0.3s ease-in;
+}
+
+.timeline {
+  background-color: rgba(100, 100, 100, 0.5);
+  height: 4px;
+  width: 100%;
+  position: relative;
+  transition: height 0.25s linear;
+  transform-origin: center center;
+  &:hover {
+    height: 8px;
+    .thumb-indicator {
+      --scale: 1;
+    }
+  }
+}
+
+.timeline::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  right: calc(100% - var(--preview-position) * 100%);
+  background-color: rgb(150, 150, 150);
+  display: none;
+}
+
+.timeline::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  right: calc(100% - var(--progress-position) * 100%);
+  background-color: red;
+}
+
+.timeline .thumb-indicator {
+  --scale: 0;
+  position: absolute;
+  transform: translateX(-50%) scale(var(--scale));
+  top: -50%;
+  height: 200%;
+  left: calc(var(--progress-position) * 100%);
+  background-color: red;
+  border-radius: 50%;
+  transition: transform 150ms ease-in-out;
+  aspect-ratio: 1 / 1;
+}
+
+.inpoint-indicator,
+.outpoint-indicator {
+  position: absolute;
+  font-size: 1rem;
+  bottom: -4px;
+  color: lightblue;
+  border-radius: 50%;
+  z-index: 1000;
+  font-weight: 700;
+  display: block;
+}
+
+.inpoint-indicator {
+  left: calc(var(--inpoint-position) * 100%);
+}
+
+.outpoint-indicator {
+  left: calc(var(--outpoint-position) * 100%);
 }
