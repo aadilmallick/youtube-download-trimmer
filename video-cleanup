@@ -1,0 +1,37 @@
+#!/bin/bash
+
+# Set the directory containing downloaded videos
+VIDEOS_DIR="videos"
+
+# if the directory does not exist, create it
+if [[ ! -d "$VIDEOS_DIR" ]]; then
+  mkdir "$VIDEOS_DIR"
+fi
+
+# One hour in seconds
+ONE_HOUR_SECONDS=3600
+
+# Get current timestamp in seconds
+current_time=$(date +%s)
+
+# Loop through files in the videos directory
+for file in "$VIDEOS_DIR/"*; do
+  # Skip directories (check if it's a regular file)
+  if [[ ! -f "$file" ]]; then
+    continue
+  fi
+
+  # Get file modification time in seconds
+  file_time=$(stat -c %Y "$file")
+
+  # Calculate time difference in seconds
+  time_diff=$((current_time - file_time))
+
+  # Delete if file is older than one hour
+  if [[ $time_diff -gt $ONE_HOUR_SECONDS ]]; then
+    echo "Deleting: $file"
+    rm -f "$file"
+  fi
+done
+
+echo "Video deletion completed."

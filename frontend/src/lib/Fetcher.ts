@@ -6,7 +6,12 @@ export const navigateDownloadSlice = (inpoint: number, outpoint: number) => {
 
 export default class Fetcher {
   static async uploadUrl(url: string) {
-    type APIResponse = { success: boolean; [key: string]: any; error?: string };
+    type ErrorResponse = { success: false; error: string };
+    type APIResponse = {
+      success: true;
+      youtubeId: string;
+      filePath: string;
+    };
     const response = await fetch("/api/upload", {
       method: "POST",
       headers: {
@@ -17,33 +22,53 @@ export default class Fetcher {
     if (!response.ok) {
       if (response.status === 400) {
         toast.error("Invalid URL");
-        return { success: false, error: "Invalid URL" } as APIResponse;
+        return { success: false, error: "Invalid URL" } as ErrorResponse;
       }
       toast.error("Failed to upload video");
-      return { success: false, error: "Failed to upload video" } as APIResponse;
+      return {
+        success: false,
+        error: "Failed to upload video",
+      } as ErrorResponse;
     }
     return (await response.json()) as APIResponse;
   }
 
-  static async compressVideo() {
-    type APIResponse = { success: boolean; [key: string]: any; error?: string };
-    const response = await fetch("/api/compress");
+  static async compressVideo(filePath: string) {
+    type ErrorResponse = { success: false; error: string };
+    type APIResponse = {
+      success: true;
+      filePath: string;
+    };
+    const response = await fetch("/api/compress", {
+      method: "POST",
+      body: JSON.stringify({
+        filePath,
+      }),
+    });
     if (!response.ok) {
       if (response.status === 401) {
         toast.error("No video uploaded");
-        return { success: false, error: "No video uploaded" } as APIResponse;
+        return { success: false, error: "No video uploaded" } as ErrorResponse;
       }
       toast.error("Failed to compress video");
       return {
         success: false,
         error: "Failed to compress video",
-      } as APIResponse;
+      } as ErrorResponse;
     }
     return (await response.json()) as APIResponse;
   }
 
-  static async downloadVideo() {
-    const response = await fetch("/api/download");
+  static async downloadVideo(filePath: string) {
+    const response = await fetch("/api/download", {
+      method: "POST",
+      body: JSON.stringify({
+        filePath,
+      }),
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
     if (!response.ok) {
       if (response.status === 401) {
         toast.error("No video uploaded");
@@ -55,7 +80,7 @@ export default class Fetcher {
     return response.blob();
   }
 
-  static async getFramerateOfVideo() {
+  static async getFramerateOfVideo(filePath: string) {
     type APIResponse = {
       success: true;
       frameRate: number;
@@ -64,7 +89,15 @@ export default class Fetcher {
       success: false;
       error: string;
     };
-    const response = await fetch("/api/framerate");
+    const response = await fetch("/api/framerate", {
+      method: "POST",
+      body: JSON.stringify({
+        filePath,
+      }),
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
     if (!response.ok) {
       if (response.status === 401) {
         toast.error("No video uploaded");
@@ -79,14 +112,22 @@ export default class Fetcher {
     return (await response.json()) as APIResponse;
   }
 
-  static async downloadVideoSlice(inpoint: number, outpoint: number) {
-    console.log(
-      `getting /api/download/slice?inpoint=${inpoint}&outpoint=${outpoint}`
-    );
-
-    const response = await fetch(
-      `/api/download/slice?inpoint=${inpoint}&outpoint=${outpoint}`
-    );
+  static async downloadVideoSlice(
+    inpoint: number,
+    outpoint: number,
+    filePath: string
+  ) {
+    const response = await fetch("/api/download/slice", {
+      method: "POST",
+      body: JSON.stringify({
+        filePath,
+        inpoint,
+        outpoint,
+      }),
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
     if (!response.ok) {
       if (response.status === 401) {
         toast.error("No video uploaded");

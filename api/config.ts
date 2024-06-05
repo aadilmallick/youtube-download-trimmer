@@ -2,6 +2,7 @@ console.log("SERVER_MODE", process.env.SERVER_MODE);
 
 type ServerMode = "development" | "production";
 type ClassKeys = keyof Config;
+// for environment variables
 class Config {
   public readonly PORT: number;
   public readonly SERVER_MODE: ServerMode;
@@ -17,25 +18,6 @@ class Config {
     }
   }
 }
-
-interface GlobalConstants {
-  youtubeId: string | null;
-  clear: () => void;
-  videoFilepath: string | null;
-}
-
-export const globalConstants: GlobalConstants = {
-  youtubeId: null,
-  clear() {
-    for (const key in this) {
-      if (key !== "clear") {
-        // @ts-ignore
-        this[key] = null;
-      }
-    }
-  },
-  videoFilepath: null,
-};
 
 const config = new Config();
 export default config;

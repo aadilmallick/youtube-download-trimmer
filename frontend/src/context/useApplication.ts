@@ -5,6 +5,8 @@ type Store = {
   setUploaded: () => void;
   blobUrl: string;
   setBlobUrl: (blobUrl: string) => void;
+  filePath: string;
+  setFilePath: (filePath: string) => void;
 };
 
 export const useApplicationStore = create<Store>()((set) => ({
@@ -12,4 +14,6 @@ export const useApplicationStore = create<Store>()((set) => ({
   setUploaded: () => set((state) => ({ uploaded: true })),
   blobUrl: "",
   setBlobUrl: (blobUrl: string) => set((state) => ({ blobUrl })),
+  filePath: "",
+  setFilePath: (filePath: string) => set((state) => ({ filePath })),
 }));

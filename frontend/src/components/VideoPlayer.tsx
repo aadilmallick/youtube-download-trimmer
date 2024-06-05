@@ -5,6 +5,7 @@ import { toast } from "react-toastify";
 import { Loader } from "./Loader";
 import PlaybackSpeedControls from "./PlaybackSpeedControls";
 import VideoPlayerModel from "./VideoPlayerModel";
+import { useApplicationStore } from "../context/useApplication";
 
 interface VideoPlayerProps {
   blobUrl: string;
@@ -60,6 +61,7 @@ const VideoPlayer = ({ blobUrl }: VideoPlayerProps) => {
   const [sliceLoading, setSliceLoading] = React.useState(false);
   const [blobSlice, setBlobSlice] = React.useState<Blob | null>(null);
   const [speed, setSpeed] = React.useState(1);
+  const { filePath } = useApplicationStore();
 
   const markInpoint = (currentTime: number, videoDuration: number) => {
     if (currentTime > -1) {
@@ -104,6 +106,7 @@ const VideoPlayer = ({ blobUrl }: VideoPlayerProps) => {
     if (!video) return;
 
     const videoModel = new VideoPlayerModel(video);
+    videoModel.setFramerate(filePath);
     setSliderVolume(videoModel.volume);
 
     // clicking on mute button
@@ -184,7 +187,7 @@ const VideoPlayer = ({ blobUrl }: VideoPlayerProps) => {
       return;
     }
     setSliceLoading(true);
-    const blob = await Fetcher.downloadVideoSlice(inpoint, outpoint);
+    const blob = await Fetcher.downloadVideoSlice(inpoint, outpoint, filePath);
     setSliceLoading(false);
     setBlobSlice(blob);
   };
@@ -242,12 +245,18 @@ const VideoPlayer = ({ blobUrl }: VideoPlayerProps) => {
         {blobSlice && <DownloadBlob blob={blobSlice} />}
         {sliceLoading && <Loader />}
       </div>
-      <div className="shortcuts py-8 max-w-[1000px] mx-auto">
+      <div className="shortcuts py-8 max-w-[1000px] mx-auto px-4">
         <p>
           Press <kbd>n</kbd> to go to next frame
         </p>
         <p>
           Press <kbd>b</kbd> to go to previous frame
+        </p>
+        <p>
+          Press <kbd>i</kbd> to set inpoint
+        </p>
+        <p>
+          Press <kbd>o</kbd> to set outpoint
         </p>
       </div>
     </>

@@ -25,5 +25,7 @@ A self-hosted web application to download and trim youtube videos, running in Do
 - [ ] Prevent user from leaving page if they have unsaved changes
 - [x] Add frame seeking keyboard shortcuts
 - [ ] Add visual indicator of inpoint outpoint on timeline
+- [ ] add github actions
+- [ ] create tests
 
 ## What I learned

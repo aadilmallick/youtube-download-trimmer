@@ -9,10 +9,9 @@ import fs from "fs/promises";
 import {
   validateYoutubeUrl,
   validateYoutubeId,
-  checkVideoIsUploadedToServer,
   validateInpointOutpoint,
+  validateVideoIsUploaded,
 } from "./apiMiddleware";
-import { globalConstants } from "../api/config";
 import VideoModel from "../api/lib";
 import * as path from "path";
 
@@ -26,37 +25,33 @@ apiRouter.use(
 apiRouter.post("/upload", validateYoutubeUrl, async (c) => {
   const data = c.req.valid("json");
   const youtubeId = data.url.split("v=")[1];
-  globalConstants.youtubeId = youtubeId;
   try {
-    if (await fs.exists("videos")) {
-      await fs.rm("videos", { recursive: true, force: true });
-    }
-    await fs.mkdir("videos");
     await $`yt-dlp -f 'bestvideo[ext=mp4]+bestaudio[ext=m4a]/mp4' ${data.url}`.cwd(
       "videos"
     );
-    const filepath = await VideoModel.getFilePath(globalConstants.youtubeId);
-    globalConstants.videoFilepath = filepath;
+    const filepath = await VideoModel.getFilePath(youtubeId);
 
+    // server returns this, frontend passes this on each request
     return c.json({
       success: true,
-      message: `Downloaded video with id ${youtubeId}`,
+      youtubeId: youtubeId,
+      filePath: filepath,
     });
   } catch (e) {
     console.error(e);
     c.status(500);
-    globalConstants.clear();
     return c.json({ error: "Failed to download video", success: false });
   }
 });
 
-apiRouter.get("/compress", checkVideoIsUploadedToServer, async (c) => {
+apiRouter.post("/compress", validateVideoIsUploaded, async (c) => {
+  const { filePath } = c.req.valid("json");
   try {
-    await VideoModel.compressVideo(globalConstants.videoFilepath!!);
+    await VideoModel.compressVideo(filePath);
     return c.json({
       message: "Compressed video",
       success: true,
-      filepath: globalConstants.videoFilepath,
+      filePath: filePath,
     });
   } catch (e) {
     c.status(500);
@@ -68,8 +63,9 @@ apiRouter.get("/compress", checkVideoIsUploadedToServer, async (c) => {
   }
 });
 
-apiRouter.get("/download", checkVideoIsUploadedToServer, async (c) => {
-  const file = Bun.file(globalConstants.videoFilepath!!);
+apiRouter.post("/download", validateVideoIsUploaded, async (c) => {
+  const { filePath } = c.req.valid("json");
+  const file = Bun.file(filePath);
   return new Response(file, {
     headers: {
       "Content-Type": "video/mp4",
@@ -77,62 +73,44 @@ apiRouter.get("/download", checkVideoIsUploadedToServer, async (c) => {
   });
 });
 
-apiRouter.get(
-  "/download/slice",
-  checkVideoIsUploadedToServer,
-  validateInpointOutpoint,
-  async (c) => {
-    const { inpoint, outpoint } = c.req.valid("query");
-    try {
-      const slicedPath = await VideoModel.createVideoSlice(
-        globalConstants.videoFilepath!!,
-        inpoint,
-        outpoint
-      );
-      console.log("finished slicing!");
-      const file = Bun.file(slicedPath);
-      let fileName = path.basename(file.name!!);
-      fileName = fileName
-        .replaceAll("[", "")
-        .replaceAll("]", "")
-        .replaceAll(" ", "_");
-      return new Response(file, {
-        headers: {
-          "Content-Type": "video/mp4",
-        },
-      });
-    } catch (e) {
-      console.error(e);
-      c.status(500);
-      return c.json({
-        error: "Failed to slice video",
-        success: false,
-      });
-    }
+apiRouter.post("/download/slice", validateInpointOutpoint, async (c) => {
+  const { inpoint, outpoint, filePath } = c.req.valid("json");
+  try {
+    const slicedPath = await VideoModel.createVideoSlice(
+      filePath,
+      inpoint,
+      outpoint
+    );
+    console.log("finished slicing!");
+    const file = Bun.file(slicedPath);
+    let fileName = path.basename(file.name!!);
+    fileName = fileName
+      .replaceAll("[", "")
+      .replaceAll("]", "")
+      .replaceAll(" ", "_");
+    return new Response(file, {
+      headers: {
+        "Content-Type": "video/mp4",
+      },
+    });
+  } catch (e) {
+    console.error(e);
+    c.status(500);
+    return c.json({
+      error: "Failed to slice video",
+      success: false,
+    });
   }
-);
+});
 
-apiRouter.get("/framerate", checkVideoIsUploadedToServer, async (c) => {
-  const frameRate = await VideoModel.getFrameRate(
-    globalConstants.videoFilepath!!
-  );
+apiRouter.post("/framerate", validateVideoIsUploaded, async (c) => {
+  const { filePath } = c.req.valid("json");
+
+  const frameRate = await VideoModel.getFrameRate(filePath);
   return c.json({
     success: true,
     frameRate,
   });
 });
-
-apiRouter.get("/ping", (c) => {
-  return c.json({ message: "pinged api successfully" });
-});
-
-// apiRouter.get("/README", (c) => {
-//   return new Response(Bun.file("README.md"), {
-//     headers: {
-//       "Content-Type": "text/markdown",
-//       "Content-Disposition": "attachment; filename=README.md",
-//     },
-//   });
-// });
 
 export default apiRouter;

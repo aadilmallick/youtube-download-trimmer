@@ -46,14 +46,12 @@ class VideoPlayerModel {
       );
     });
     this.handleTimelineEvents();
-    (async () => {
-      this.frameRate = await this.getFramerate();
-    })();
   }
 
-  private async getFramerate() {
-    const data = await Fetcher.getFramerateOfVideo();
+  public async setFramerate(filePath: string) {
+    const data = await Fetcher.getFramerateOfVideo(filePath);
     if (data.success === true) {
+      this.frameRate = data.frameRate;
       return data.frameRate;
     } else {
       return null;

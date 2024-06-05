@@ -1,5 +1,6 @@
 import { $ } from "bun";
 import fs from "fs/promises";
+import { v4 as uuidv4 } from "uuid";
 
 export default class VideoModel {
   static async compressVideo(input_path: string) {
@@ -13,7 +14,10 @@ export default class VideoModel {
     if (!filepath.trim()) {
       return null;
     }
-    return `videos/${filepath.trim()}`;
+    const existingPath = `videos/${filepath.trim()}`;
+    const newPath = existingPath.split(".mp4")[0] + `-${uuidv4()}.mp4`;
+    await fs.rename(existingPath, newPath);
+    return newPath;
   }
 
   static async getFrameRate(input_path: string) {

@@ -17,16 +17,18 @@ export const useAPILoading = create<Store>()((set) => ({
 }));
 
 const VideoPage = () => {
-  const { uploaded, setBlobUrl, blobUrl } = useApplicationStore();
-  if (!uploaded) {
+  const { uploaded, setBlobUrl, blobUrl, filePath, setFilePath } =
+    useApplicationStore();
+  if (!uploaded || !filePath) {
     return <Navigate to="/" />;
   }
 
   const [message, setMessage] = React.useState("");
   const onCompress = async () => {
-    const data = await Fetcher.compressVideo();
+    const data = await Fetcher.compressVideo(filePath);
     if (data.success === true) {
       setMessage("Compression finished. Now downloading...");
+      setFilePath(data.filePath);
       await onDownload();
     } else {
       setMessage(data.error || "Failed to compress video");
@@ -34,7 +36,8 @@ const VideoPage = () => {
   };
 
   const onDownload = async () => {
-    const blob = await Fetcher.downloadVideo();
+    console.log("downloading at filepath");
+    const blob = await Fetcher.downloadVideo(filePath);
     if (!blob) {
       setMessage("Download failed");
     } else {

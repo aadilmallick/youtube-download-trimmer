@@ -17,7 +17,7 @@ const Home = () => {
 
 const VideoUpload = () => {
   const [url, setUrl] = useState("");
-  const { setUploaded } = useApplicationStore();
+  const { setUploaded, setFilePath } = useApplicationStore();
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   //   const {} =
@@ -28,6 +28,8 @@ const VideoUpload = () => {
     // if request worked, navigate to /video
     if (data.success === true) {
       setUploaded();
+      console.log("filepath:", data.filePath);
+      setFilePath(data.filePath);
       setLoading(false);
       navigate("/video");
     }

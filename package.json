@@ -12,10 +12,12 @@
   "dependencies": {
     "@hono/zod-validator": "^0.2.2",
     "hono": "^4.4.2",
+    "uuid": "^9.0.1",
     "zod": "^3.23.8"
   },
   "scripts": {
     "start": "bun run build && bun run index.ts",
-    "build": "npm run build --prefix frontend"
+    "build": "npm run build --prefix frontend",
+    "dev": "bun run --watch index.ts"
   }
 }
