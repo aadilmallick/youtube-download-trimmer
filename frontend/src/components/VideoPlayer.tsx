@@ -11,7 +11,13 @@ interface VideoPlayerProps {
   blobUrl: string;
 }
 
-function DownloadBlob({ blob }: { blob: Blob }) {
+function DownloadBlob({
+  blob,
+  title = "Download slice",
+}: {
+  blob: Blob;
+  title?: string;
+}) {
   const linkRef = React.useRef<HTMLAnchorElement>(null);
   const [url, setUrl] = React.useState<string | null>(null);
 
@@ -46,7 +52,7 @@ function DownloadBlob({ blob }: { blob: Blob }) {
           Download slice
         </a>
       )}
-      <button onClick={handleClick}>Download slice</button>
+      <button onClick={handleClick}>{title}</button>
     </div>
   );
 }
@@ -59,7 +65,7 @@ const VideoPlayer = ({ blobUrl }: VideoPlayerProps) => {
   const [inpoint, setInpoint] = React.useState(-1);
   const [outpoint, setOutpoint] = React.useState(-1);
   const [sliceLoading, setSliceLoading] = React.useState(false);
-  const [blobSlice, setBlobSlice] = React.useState<Blob | null>(null);
+  const [blobSlices, setBlobSlices] = React.useState<Blob[]>([]);
   const [speed, setSpeed] = React.useState(1);
   const { filePath } = useApplicationStore();
 
@@ -188,8 +194,13 @@ const VideoPlayer = ({ blobUrl }: VideoPlayerProps) => {
     }
     setSliceLoading(true);
     const blob = await Fetcher.downloadVideoSlice(inpoint, outpoint, filePath);
+    if (!blob) {
+      toast.error("Failed to create slice");
+      setSliceLoading(false);
+      return;
+    }
+    setBlobSlices([...blobSlices, blob]);
     setSliceLoading(false);
-    setBlobSlice(blob);
   };
 
   if (blobUrl === "") {
@@ -242,7 +253,17 @@ const VideoPlayer = ({ blobUrl }: VideoPlayerProps) => {
         >
           Create slice
         </button>
-        {blobSlice && <DownloadBlob blob={blobSlice} />}
+        {blobSlices.length > 0 && (
+          <div className="flex gap-4">
+            {blobSlices.map((blob, index) => (
+              <DownloadBlob
+                key={index}
+                blob={blob}
+                title={"Download slice " + index}
+              />
+            ))}
+          </div>
+        )}
         {sliceLoading && <Loader />}
       </div>
       <div className="shortcuts py-8 max-w-[1000px] mx-auto px-4">

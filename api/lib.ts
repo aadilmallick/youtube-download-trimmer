@@ -35,9 +35,9 @@ export default class VideoModel {
     const output_path =
       input_path.split(".mp4")[0] +
       `-sliced-${Math.floor(Date.now() / 1000)}.mp4`;
-    await $`ffmpeg -i ${input_path} -ss ${inpoint} -t ${
+    await $`ffmpeg -ss ${inpoint} -t ${
       outpoint - inpoint
-    } -c:v libx264 -c:a aac ${output_path}`;
+    } -i ${input_path} -c copy ${output_path}`;
     return output_path;
   }
 }
