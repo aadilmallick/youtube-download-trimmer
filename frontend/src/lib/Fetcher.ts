@@ -44,6 +44,9 @@ export default class Fetcher {
       body: JSON.stringify({
         filePath,
       }),
+      headers: {
+        "Content-Type": "application/json",
+      },
     });
     if (!response.ok) {
       if (response.status === 401) {
@@ -54,6 +57,35 @@ export default class Fetcher {
       return {
         success: false,
         error: "Failed to compress video",
+      } as ErrorResponse;
+    }
+    return (await response.json()) as APIResponse;
+  }
+
+  static async clearVideos(filePath: string) {
+    type ErrorResponse = { success: false; error: string };
+    type APIResponse = {
+      success: true;
+      message: string;
+    };
+    const response = await fetch("/api/clearvideos", {
+      method: "POST",
+      body: JSON.stringify({
+        filePath,
+      }),
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+    if (!response.ok) {
+      if (response.status === 401) {
+        toast.error("No video uploaded");
+        return { success: false, error: "No video uploaded" } as ErrorResponse;
+      }
+      toast.error("Failed to clear videos");
+      return {
+        success: false,
+        error: "Failed to clear videos",
       } as ErrorResponse;
     }
     return (await response.json()) as APIResponse;

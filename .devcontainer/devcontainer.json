@@ -21,7 +21,11 @@
         "esbenp.prettier-vscode",
         "burkeholland.simple-react-snippets",
         "yzhang.markdown-all-in-one",
-        "steoates.autoimport"
+        "steoates.autoimport",
+        "million.million-lint",
+        "vitest.explorer",
+        "wayou.vscode-todo-highlight",
+        "redhat.vscode-yaml"
       ]
     }
   },

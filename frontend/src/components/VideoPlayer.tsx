@@ -52,7 +52,12 @@ function DownloadBlob({
           Download slice
         </a>
       )}
-      <button onClick={handleClick}>{title}</button>
+      <button
+        onClick={handleClick}
+        className="bg-blue-400 text-white px-4 py-2 rounded-lg text-sm font-semibold active:bg-blue-500 transition-colors"
+      >
+        {title}
+      </button>
     </div>
   );
 }
@@ -254,7 +259,7 @@ const VideoPlayer = ({ blobUrl }: VideoPlayerProps) => {
           Create slice
         </button>
         {blobSlices.length > 0 && (
-          <div className="flex gap-4">
+          <div className="flex gap-4 flex-wrap">
             {blobSlices.map((blob, index) => (
               <DownloadBlob
                 key={index}

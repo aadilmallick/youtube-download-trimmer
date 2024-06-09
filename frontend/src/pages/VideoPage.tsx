@@ -1,29 +1,19 @@
 import { useApplicationStore } from "../context/useApplication";
-import { Navigate } from "react-router-dom";
+import { Navigate, useNavigate } from "react-router-dom";
 import Fetcher from "../lib/Fetcher";
 import React from "react";
-import { create } from "zustand";
-import { set } from "zod";
+
 import VideoPlayer from "../components/VideoPlayer";
-
-type Store = {
-  loading: boolean;
-  setLoading: (loading: boolean) => void;
-};
-
-export const useAPILoading = create<Store>()((set) => ({
-  loading: false,
-  setLoading: (loading) => set({ loading }),
-}));
+import { useAPILoading } from "../hooks/useAPILoading";
 
 const VideoPage = () => {
   const { uploaded, setBlobUrl, blobUrl, filePath, setFilePath } =
     useApplicationStore();
+  const [message, setMessage] = React.useState("");
   if (!uploaded || !filePath) {
     return <Navigate to="/" />;
   }
 
-  const [message, setMessage] = React.useState("");
   const onCompress = async () => {
     const data = await Fetcher.compressVideo(filePath);
     if (data.success === true) {
@@ -65,7 +55,35 @@ const VideoPage = () => {
     <section className="h-screen pt-24">
       {BeforeVideoDownloadedContent()}
       <VideoPlayer blobUrl={blobUrl} />
+      <ClearVideoButton />
     </section>
+  );
+};
+
+const ClearVideoButton = () => {
+  const { loading, setLoading } = useAPILoading();
+  const { clearStore, filePath } = useApplicationStore();
+  const navigate = useNavigate();
+
+  if (!filePath) {
+    return null;
+  }
+
+  return (
+    <button
+      className="bg-black text-white font-semibold px-4 py-2 text-center rounded-md focus:ring-blue-300 focus:ring-2 absolute top-4 right-4 z-50"
+      disabled={loading}
+      onClick={async () => {
+        setLoading(true);
+        const data = await Fetcher.clearVideos(filePath);
+        console.log(data);
+        clearStore();
+        setLoading(false);
+        navigate("/");
+      }}
+    >
+      Clear Videos
+    </button>
   );
 };
 

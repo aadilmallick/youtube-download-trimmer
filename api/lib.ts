@@ -10,12 +10,17 @@ export default class VideoModel {
   }
 
   static async getFilePath(youtubeId: string) {
-    const filepath = await $`ls | grep ${youtubeId}`.cwd("videos").text();
+    const filepath = await $`ls | grep -E '\[${youtubeId}\]\.mp4'`
+      .cwd("videos")
+      .text();
+    console.log("filepath", filepath);
     if (!filepath.trim()) {
       return null;
     }
     const existingPath = `videos/${filepath.trim()}`;
     const newPath = existingPath.split(".mp4")[0] + `-${uuidv4()}.mp4`;
+    console.log("existingPath", existingPath);
+    console.log("newPath", newPath);
     await fs.rename(existingPath, newPath);
     return newPath;
   }

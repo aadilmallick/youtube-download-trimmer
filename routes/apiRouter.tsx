@@ -26,7 +26,7 @@ apiRouter.post("/upload", validateYoutubeUrl, async (c) => {
   const data = c.req.valid("json");
   const youtubeId = data.url.split("v=")[1];
   try {
-    await $`yt-dlp -f 'bestvideo[ext=mp4]+bestaudio[ext=m4a]/mp4' ${data.url}`.cwd(
+    await $`yt-dlp -i -f 'bestvideo[ext=mp4]+bestaudio[ext=m4a]/mp4' ${data.url}`.cwd(
       "videos"
     );
     const filepath = await VideoModel.getFilePath(youtubeId);
@@ -58,6 +58,30 @@ apiRouter.post("/compress", validateVideoIsUploaded, async (c) => {
     console.error(e);
     return c.json({
       error: "Failed to compress video",
+      success: false,
+    });
+  }
+});
+
+apiRouter.post("/clearvideos", validateVideoIsUploaded, async (c) => {
+  const { filePath } = c.req.valid("json");
+  const filename = path.basename(filePath).split(".mp4")[0];
+  try {
+    const filesToDelete = (await fs.readdir("videos")).filter((file) =>
+      path.basename(file).includes(filename)
+    );
+    filesToDelete.forEach(
+      async (file) => await fs.unlink(path.join("videos", file))
+    );
+    return c.json({
+      message: "Deleted video files",
+      success: true,
+    });
+  } catch (e) {
+    console.error(e);
+    c.status(500);
+    return c.json({
+      error: "Failed to delete video files",
       success: false,
     });
   }

@@ -7,6 +7,7 @@ type Store = {
   setBlobUrl: (blobUrl: string) => void;
   filePath: string;
   setFilePath: (filePath: string) => void;
+  clearStore: () => void;
 };
 
 export const useApplicationStore = create<Store>()((set) => ({
@@ -16,4 +17,10 @@ export const useApplicationStore = create<Store>()((set) => ({
   setBlobUrl: (blobUrl: string) => set((state) => ({ blobUrl })),
   filePath: "",
   setFilePath: (filePath: string) => set((state) => ({ filePath })),
+  clearStore: () =>
+    set((state) => ({
+      uploaded: false,
+      blobUrl: "",
+      filePath: "",
+    })),
 }));
