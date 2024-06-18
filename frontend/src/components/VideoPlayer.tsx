@@ -146,6 +146,16 @@ const VideoPlayer = ({ blobUrl }: VideoPlayerProps) => {
     });
 
     function setKeyBoardShortcuts(e: KeyboardEvent) {
+      if (e.shiftKey && e.code === "ArrowRight") {
+        e.preventDefault();
+        videoModel.skip(1);
+        return;
+      }
+      if (e.shiftKey && e.code === "ArrowLeft") {
+        e.preventDefault();
+        videoModel.skip(-1);
+        return;
+      }
       switch (e.key.toLowerCase()) {
         case " ":
           videoModel.togglePlay();

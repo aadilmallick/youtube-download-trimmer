@@ -5,7 +5,7 @@ import { v4 as uuidv4 } from "uuid";
 export default class VideoModel {
   static async compressVideo(input_path: string) {
     const output_path = `${input_path.split(".mp4")[0]}-compressed.mp4`;
-    await $`ffmpeg -i ${input_path} -vcodec libx265 -crf 28 -preset slow -acodec copy ${output_path}`.quiet();
+    await $`ffmpeg -i ${input_path} -vcodec libx264 -crf 28 -preset slow -acodec copy ${output_path}`.quiet();
     return output_path;
   }
 

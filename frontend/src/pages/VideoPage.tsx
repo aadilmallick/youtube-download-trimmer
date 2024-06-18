@@ -71,7 +71,7 @@ const ClearVideoButton = () => {
 
   return (
     <button
-      className="bg-black text-white font-semibold px-4 py-2 text-center rounded-md focus:ring-blue-300 focus:ring-2 absolute top-4 right-4 z-50"
+      className="bg-black text-white font-semibold px-4 py-2 text-center rounded-md focus:ring-blue-300 focus:ring-2 absolute top-4 right-4 z-50 disabled:cursor-not-allowed disabled:opacity-50"
       disabled={loading}
       onClick={async () => {
         setLoading(true);
@@ -87,16 +87,20 @@ const ClearVideoButton = () => {
   );
 };
 
-const CompressButton = ({ onCompress }: { onCompress: () => void }) => {
+const CompressButton = ({
+  onCompress,
+}: {
+  onCompress: () => Promise<void>;
+}) => {
   const { loading, setLoading } = useAPILoading();
 
   return (
     <button
-      className="bg-black text-white font-semibold px-4 py-2 w-full text-center rounded-md focus:ring-blue-300 focus:ring-2"
+      className="bg-black text-white font-semibold px-4 py-2 w-full text-center rounded-md focus:ring-blue-300 focus:ring-2 disabled:cursor-not-allowed disabled:opacity-50"
       disabled={loading}
       onClick={async () => {
         setLoading(true);
-        onCompress();
+        await onCompress();
         setLoading(false);
       }}
     >
@@ -105,16 +109,20 @@ const CompressButton = ({ onCompress }: { onCompress: () => void }) => {
   );
 };
 
-const DownloadButton = ({ onDownload }: { onDownload: () => void }) => {
+const DownloadButton = ({
+  onDownload,
+}: {
+  onDownload: () => Promise<void>;
+}) => {
   const { loading, setLoading } = useAPILoading();
 
   return (
     <button
-      className="bg-black text-white font-semibold px-4 py-2 w-full text-center rounded-md focus:ring-blue-300 focus:ring-2"
+      className="bg-black text-white font-semibold px-4 py-2 w-full text-center rounded-md focus:ring-blue-300 focus:ring-2 disabled:cursor-not-allowed disabled:opacity-50"
       disabled={loading}
       onClick={async () => {
         setLoading(true);
-        onDownload();
+        await onDownload();
         setLoading(false);
       }}
     >
