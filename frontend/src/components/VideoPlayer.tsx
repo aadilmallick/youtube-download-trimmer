@@ -14,9 +14,11 @@ interface VideoPlayerProps {
 function DownloadBlob({
   blob,
   title = "Download slice",
+  onDelete,
 }: {
   blob: Blob;
   title?: string;
+  onDelete: () => void;
 }) {
   const linkRef = React.useRef<HTMLAnchorElement>(null);
   const [url, setUrl] = React.useState<string | null>(null);
@@ -32,6 +34,11 @@ function DownloadBlob({
       };
     }
   }, [blob]);
+
+  const handleDelete = (e: React.MouseEvent<HTMLSpanElement, MouseEvent>) => {
+    e.stopPropagation();
+    onDelete();
+  };
 
   const handleClick = () => {
     if (linkRef.current) {
@@ -56,7 +63,13 @@ function DownloadBlob({
         onClick={handleClick}
         className="bg-blue-400 text-white px-4 py-2 rounded-lg text-sm font-semibold active:bg-blue-500 transition-colors"
       >
-        {title}
+        {title}{" "}
+        <span
+          className="text-white font-bold hover:text-red-400"
+          onClick={handleDelete}
+        >
+          X
+        </span>
       </button>
     </div>
   );
@@ -218,6 +231,11 @@ const VideoPlayer = ({ blobUrl }: VideoPlayerProps) => {
     setSliceLoading(false);
   };
 
+  const handleRemoveSlice = (index: number) => {
+    const newBlobSlices = blobSlices.filter((_, i) => i !== index);
+    setBlobSlices(newBlobSlices);
+  };
+
   if (blobUrl === "") {
     return null;
   }
@@ -275,6 +293,7 @@ const VideoPlayer = ({ blobUrl }: VideoPlayerProps) => {
                 key={index}
                 blob={blob}
                 title={"Download slice " + index}
+                onDelete={handleRemoveSlice.bind(null, index)}
               />
             ))}
           </div>
