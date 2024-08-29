@@ -2,77 +2,12 @@ import React from "react";
 import VolumeControls, { VolumeControlsProps } from "./VolumeControls";
 import Fetcher from "../lib/Fetcher";
 import { toast } from "react-toastify";
-import { Loader } from "./Loader";
 import PlaybackSpeedControls from "./PlaybackSpeedControls";
 import VideoPlayerModel from "./VideoPlayerModel";
 import { useApplicationStore } from "../context/useApplication";
 
 interface VideoPlayerProps {
   blobUrl: string;
-}
-
-function DownloadBlob({
-  blob,
-  title = "Download slice",
-  onDelete,
-}: {
-  blob: Blob;
-  title?: string;
-  onDelete: () => void;
-}) {
-  const linkRef = React.useRef<HTMLAnchorElement>(null);
-  const [url, setUrl] = React.useState<string | null>(null);
-
-  React.useEffect(() => {
-    if (blob) {
-      const file = new File([blob], "slice.mp4", { type: blob.type });
-      const objectUrl = URL.createObjectURL(file);
-      setUrl(objectUrl);
-
-      return () => {
-        URL.revokeObjectURL(objectUrl);
-      };
-    }
-  }, [blob]);
-
-  const handleDelete = (e: React.MouseEvent<HTMLSpanElement, MouseEvent>) => {
-    e.stopPropagation();
-    onDelete();
-  };
-
-  const handleClick = () => {
-    if (linkRef.current) {
-      linkRef.current.click();
-    }
-  };
-  console.log("blobSliceUrl", url);
-
-  return (
-    <div>
-      {url && (
-        <a
-          href={url}
-          download="slice.mp4"
-          ref={linkRef}
-          style={{ display: "none" }}
-        >
-          Download slice
-        </a>
-      )}
-      <button
-        onClick={handleClick}
-        className="bg-blue-400 text-white px-4 py-2 rounded-lg text-sm font-semibold active:bg-blue-500 transition-colors"
-      >
-        {title}{" "}
-        <span
-          className="text-white font-bold hover:text-red-400"
-          onClick={handleDelete}
-        >
-          X
-        </span>
-      </button>
-    </div>
-  );
 }
 
 const VideoPlayer = ({ blobUrl }: VideoPlayerProps) => {
@@ -83,7 +18,6 @@ const VideoPlayer = ({ blobUrl }: VideoPlayerProps) => {
   const [inpoint, setInpoint] = React.useState(-1);
   const [outpoint, setOutpoint] = React.useState(-1);
   const [sliceLoading, setSliceLoading] = React.useState(false);
-  const [blobSlices, setBlobSlices] = React.useState<Blob[]>([]);
   const [speed, setSpeed] = React.useState(1);
   const { filePath } = useApplicationStore();
 
@@ -220,20 +154,21 @@ const VideoPlayer = ({ blobUrl }: VideoPlayerProps) => {
       toast.error("Please set inpoint and outpoint");
       return;
     }
-    setSliceLoading(true);
     const blob = await Fetcher.downloadVideoSlice(inpoint, outpoint, filePath);
+    setSliceLoading(true);
     if (!blob) {
       toast.error("Failed to create slice");
       setSliceLoading(false);
       return;
     }
-    setBlobSlices([...blobSlices, blob]);
-    setSliceLoading(false);
-  };
 
-  const handleRemoveSlice = (index: number) => {
-    const newBlobSlices = blobSlices.filter((_, i) => i !== index);
-    setBlobSlices(newBlobSlices);
+    const sliceBlobUrl = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = sliceBlobUrl;
+    link.download = "slice.mp4";
+    link.click();
+    URL.revokeObjectURL(sliceBlobUrl);
+    setSliceLoading(false);
   };
 
   if (blobUrl === "") {
@@ -284,21 +219,8 @@ const VideoPlayer = ({ blobUrl }: VideoPlayerProps) => {
           onClick={downloadSlice}
           disabled={sliceLoading}
         >
-          Create slice
+          Download slice
         </button>
-        {blobSlices.length > 0 && (
-          <div className="flex gap-4 flex-wrap">
-            {blobSlices.map((blob, index) => (
-              <DownloadBlob
-                key={index}
-                blob={blob}
-                title={"Download slice " + index}
-                onDelete={handleRemoveSlice.bind(null, index)}
-              />
-            ))}
-          </div>
-        )}
-        {sliceLoading && <Loader />}
       </div>
       <div className="shortcuts py-8 max-w-[1000px] mx-auto px-4">
         <p>
