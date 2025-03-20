@@ -32,6 +32,12 @@ export default class VideoModel {
     return Math.round(Number(text));
   }
 
+  static async downloadFrame(input_path: string, time: number) {
+    const output_path = `${input_path.split(".mp4")[0]}-frame-${time}.png`;
+    await $`ffmpeg -ss ${time} -i ${input_path} -frames:v 1 ${output_path}`;
+    return output_path;
+  }
+
   static async createVideoSlice(
     input_path: string,
     inpoint: number,

@@ -13,6 +13,10 @@ class VideoPlayerModel {
   private _isMuted: boolean = false;
   private frameRate!: number | null;
 
+  public get videoFrameRate() {
+    return this.frameRate;
+  }
+
   public get isMuted() {
     return this._isMuted;
   }

@@ -12,6 +12,7 @@ interface VideoPlayerProps {
 
 const VideoPlayer = ({ blobUrl }: VideoPlayerProps) => {
   const videoRef = React.useRef<HTMLVideoElement>(null);
+  const videoModelRef = React.useRef<VideoPlayerModel | null>(null);
   const [volumeState, setVolumeState] =
     React.useState<VolumeControlsProps["state"]>("high");
   const [sliderVolume, setSliderVolume] = React.useState(1);
@@ -64,6 +65,7 @@ const VideoPlayer = ({ blobUrl }: VideoPlayerProps) => {
     if (!video) return;
 
     const videoModel = new VideoPlayerModel(video);
+    videoModelRef.current = videoModel;
     videoModel.setFramerate(filePath);
     setSliderVolume(videoModel.volume);
 
@@ -148,6 +150,33 @@ const VideoPlayer = ({ blobUrl }: VideoPlayerProps) => {
     };
   }, [blobUrl]);
 
+  function getCurrentFrame(currentTime: number, frameRate: number) {
+    const currentFrame = Math.floor(currentTime * frameRate);
+    return currentFrame;
+  }
+
+  async function downloadCurrentFrame() {
+    const currentTime = videoRef.current?.currentTime;
+    const frameRate = videoModelRef.current?.videoFrameRate;
+    if (!currentTime || !frameRate) {
+      toast.error("Failed to get current time and frame rate");
+      return;
+    }
+    const blob = await Fetcher.downloadFrame(currentTime, filePath);
+    if (!blob) {
+      toast.error("Failed to download Frame");
+      return;
+    }
+
+    const currentFrame = getCurrentFrame(currentTime, frameRate);
+    const frameBlobUrl = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = frameBlobUrl;
+    link.download = `frame-${currentFrame}.png`;
+    link.click();
+    URL.revokeObjectURL(frameBlobUrl);
+  }
+
   const downloadSlice = async () => {
     console.log("downloading slice ...");
     if (inpoint === -1 || outpoint === -1) {
@@ -214,6 +243,12 @@ const VideoPlayer = ({ blobUrl }: VideoPlayerProps) => {
       <div className="inpoint-outpoint-container space-y-4">
         <p>Inpoint: {convertPointToNumber(inpoint)}</p>
         <p>Outpoint: {convertPointToNumber(outpoint)}</p>
+        <button
+          className="bg-black px-4 py-2 rounded-sm text-white font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
+          onClick={downloadFrame}
+        >
+          Download current Frame
+        </button>
         <button
           className="bg-black px-4 py-2 rounded-sm text-white font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
           onClick={downloadSlice}

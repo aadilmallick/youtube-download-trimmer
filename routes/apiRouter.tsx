@@ -127,6 +127,27 @@ apiRouter.post("/download/slice", validateInpointOutpoint, async (c) => {
   }
 });
 
+apiRouter.post("/download/frame", validateInpointOutpoint, async (c) => {
+  const { currentTime, filePath } = c.req.valid("json");
+  try {
+    const slicedPath = await VideoModel.downloadFrame(filePath, currentTime);
+    console.log("finished slicing!");
+    const file = Bun.file(slicedPath);
+    return new Response(file, {
+      headers: {
+        "Content-Type": "image/png",
+      },
+    });
+  } catch (e) {
+    console.error(e);
+    c.status(500);
+    return c.json({
+      error: "Failed to slice video",
+      success: false,
+    });
+  }
+});
+
 apiRouter.post("/framerate", validateVideoIsUploaded, async (c) => {
   const { filePath } = c.req.valid("json");
 

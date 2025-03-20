@@ -33,3 +33,11 @@ export const validateVideoIsUploaded = zValidator(
     filePath: z.string().trim(),
   })
 );
+
+export const validateHasFrame = zValidator(
+  "json",
+  z.object({
+    filePath: z.string().trim(),
+    currentTime: z.coerce.number().gt(-0.1),
+  })
+);

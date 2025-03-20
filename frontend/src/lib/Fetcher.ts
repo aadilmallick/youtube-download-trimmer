@@ -144,6 +144,28 @@ export default class Fetcher {
     return (await response.json()) as APIResponse;
   }
 
+  static async downloadFrame(currentTime: number, filePath: string) {
+    const response = await fetch("/api/download/frame", {
+      method: "POST",
+      body: JSON.stringify({
+        filePath,
+        currentTime,
+      }),
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+    if (!response.ok) {
+      if (response.status === 401) {
+        toast.error("No video uploaded");
+        return null;
+      }
+      toast.error("Server error");
+      return null;
+    }
+    return response.blob();
+  }
+
   static async downloadVideoSlice(
     inpoint: number,
     outpoint: number,
