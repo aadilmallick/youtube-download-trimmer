@@ -26,7 +26,7 @@ export default defineConfig({
       },
     },
     host: true, // Listen on all addresses, including the container's network
-    port: 5173, // Default Vite port
+    port: 5179, // Default Vite port
     watch: {
       usePolling: true, // Necessary for some container setups
     },

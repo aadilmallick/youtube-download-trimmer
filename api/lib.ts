@@ -1,6 +1,6 @@
 import { $ } from "bun";
 import fs from "fs/promises";
-import { v4 as uuidv4 } from "uuid";
+import crypto from "node:crypto";
 
 export default class VideoModel {
   static async compressVideo(input_path: string) {
@@ -9,20 +9,21 @@ export default class VideoModel {
     return output_path;
   }
 
-  static async getFilePath(youtubeId: string) {
-    const filepath = await $`ls | grep -E '\[${youtubeId}\]\.mp4'`
-      .cwd("videos")
-      .text();
-    console.log("filepath", filepath);
-    if (!filepath.trim()) {
+  static async getFilePath(youtubeId: string, randomUUID: string) {
+    const videoFiles = await fs.readdir("videos");
+    const videoFile = videoFiles.find(
+      (file) => file.includes(randomUUID) && file.includes(youtubeId)
+    );
+    if (!videoFile) {
       return null;
     }
-    const existingPath = `videos/${filepath.trim()}`;
-    const newPath = existingPath.split(".mp4")[0] + `-${uuidv4()}.mp4`;
-    console.log("existingPath", existingPath);
-    console.log("newPath", newPath);
-    await fs.rename(existingPath, newPath);
-    return newPath;
+    const existingPath = `videos/${videoFile}`;
+    // const newPath =
+    //   existingPath.split(".mp4")[0] + `-${crypto.randomUUID()}.mp4`;
+    // console.log("existingPath", existingPath);
+    // console.log("newPath", newPath);
+    // await fs.rename(existingPath, newPath);
+    return existingPath;
   }
 
   static async getFrameRate(input_path: string) {

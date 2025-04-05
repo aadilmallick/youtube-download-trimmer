@@ -1,7 +1,7 @@
 import Fetcher from "../lib/Fetcher";
 
 class VideoPlayerModel {
-  public videoContainer = document.querySelector(".video-container")!!;
+  public videoContainer = document.querySelector(".video-container")!;
   public playPauseBtn = this.$("[data-action='play']") as HTMLButtonElement;
   public muteBtn = this.$(".mute-btn");
   public currentTimeElement = this.$(".current-time");
@@ -63,13 +63,10 @@ class VideoPlayerModel {
   }
 
   private handleTimelineEvents() {
-    this.assignEventListener(
-      "click",
-      this.timelineContainer,
-      // @ts-ignore
-      (e: MouseEvent) => {
-        const rect = this.timelineContainer.getBoundingClientRect();
-        const x = e.clientX - rect.left;
+    this.assignEventListener("click", this.timelineContainer, (e) => {
+      const rect = this.timelineContainer.getBoundingClientRect();
+      if (e instanceof MouseEvent) {
+        const x = e!.clientX - rect.left;
         const percentage = x / rect.width;
         this.video.currentTime = this.video.duration * percentage;
         const videoPercentageSeeked =
@@ -79,7 +76,7 @@ class VideoPlayerModel {
           `${videoPercentageSeeked}`
         );
       }
-    );
+    });
   }
 
   public togglePlay() {
@@ -181,7 +178,7 @@ class VideoPlayerModel {
   }
 
   private $(selector: string) {
-    return this.videoContainer.querySelector(selector)!! as HTMLElement;
+    return this.videoContainer.querySelector(selector)! as HTMLElement;
   }
 
   public static formatTimestamp(seconds: number, withMillis = false) {

@@ -4,13 +4,17 @@ import { z } from "zod";
 import { zValidator } from "@hono/zod-validator";
 import type { FC, PropsWithChildren } from "hono/jsx";
 import { createContext, useContext } from "hono/jsx";
+import { Print } from "../api/Print";
 import { $ } from "bun";
 import fs from "fs/promises";
+import crypto from "node:crypto";
+
 import {
   validateYoutubeUrl,
   validateYoutubeId,
   validateInpointOutpoint,
   validateVideoIsUploaded,
+  validateHasFrame,
 } from "./apiMiddleware";
 import VideoModel from "../api/lib";
 import * as path from "path";
@@ -18,18 +22,24 @@ import * as path from "path";
 const apiRouter = new Hono();
 apiRouter.use(
   cors({
-    origin: "http://localhost:5173",
+    origin: "http://localhost:5179",
   })
 );
 
 apiRouter.post("/upload", validateYoutubeUrl, async (c) => {
   const data = c.req.valid("json");
   const youtubeId = data.url.split("v=")[1];
+  const randomUUID = crypto.randomUUID();
   try {
-    await $`yt-dlp -i -f 'bestvideo[ext=mp4]+bestaudio[ext=m4a]/mp4' ${data.url}`.cwd(
+    await $`yt-dlp -i -f 'bestvideo[ext=mp4]+bestaudio[ext=m4a]/mp4' -o '${randomUUID}-%(id)s.%(ext)s' ${data.url}`.cwd(
       "videos"
     );
-    const filepath = await VideoModel.getFilePath(youtubeId);
+    const filepath = await VideoModel.getFilePath(youtubeId, randomUUID);
+    Print.green(filepath);
+
+    if (!filepath) {
+      throw new Error("Filepath not found");
+    }
 
     // server returns this, frontend passes this on each request
     return c.json({
@@ -127,7 +137,7 @@ apiRouter.post("/download/slice", validateInpointOutpoint, async (c) => {
   }
 });
 
-apiRouter.post("/download/frame", validateInpointOutpoint, async (c) => {
+apiRouter.post("/download/frame", validateHasFrame, async (c) => {
   const { currentTime, filePath } = c.req.valid("json");
   try {
     const slicedPath = await VideoModel.downloadFrame(filePath, currentTime);

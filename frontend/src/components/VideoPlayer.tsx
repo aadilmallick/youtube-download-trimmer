@@ -6,6 +6,36 @@ import PlaybackSpeedControls from "./PlaybackSpeedControls";
 import VideoPlayerModel from "./VideoPlayerModel";
 import { useApplicationStore } from "../context/useApplication";
 
+export class CSSVariablesManager<
+  T extends Record<string, string | number> = Record<string, string>
+> {
+  constructor(private element: HTMLElement, defaultValues?: T) {
+    if (defaultValues) {
+      Object.entries(defaultValues).forEach(([key, value]) => {
+        this.set(key, value as T[keyof T]);
+      });
+    }
+  }
+
+  private formatName(name: string) {
+    if (name.startsWith("--")) {
+      return name;
+    }
+    return `--${name}`;
+  }
+
+  set<K extends keyof T>(name: K, value: T[K]) {
+    this.element.style.setProperty(
+      this.formatName(name as string),
+      String(value)
+    );
+  }
+
+  get(name: keyof T) {
+    return this.element.style.getPropertyValue(this.formatName(name as string));
+  }
+}
+
 interface VideoPlayerProps {
   blobUrl: string;
 }
@@ -21,6 +51,12 @@ const VideoPlayer = ({ blobUrl }: VideoPlayerProps) => {
   const [sliceLoading, setSliceLoading] = React.useState(false);
   const [speed, setSpeed] = React.useState(1);
   const { filePath } = useApplicationStore();
+
+  function displayInpointOutpoint(inpoint: number, outpoint: number) {
+    if (videoModelRef.current) {
+      videoModelRef.current.setInpointOutpoint(inpoint, outpoint);
+    }
+  }
 
   const markInpoint = (currentTime: number, videoDuration: number) => {
     if (currentTime > -1) {
@@ -58,6 +94,10 @@ const VideoPlayer = ({ blobUrl }: VideoPlayerProps) => {
       videoRef.current.volume = Number(e.target.value);
     }
   };
+
+  React.useEffect(() => {
+    displayInpointOutpoint(inpoint, outpoint);
+  }, [inpoint, outpoint]);
 
   React.useEffect(() => {
     if (!blobUrl) return;
@@ -162,9 +202,11 @@ const VideoPlayer = ({ blobUrl }: VideoPlayerProps) => {
       toast.error("Failed to get current time and frame rate");
       return;
     }
+    setSliceLoading(true);
     const blob = await Fetcher.downloadFrame(currentTime, filePath);
     if (!blob) {
       toast.error("Failed to download Frame");
+      setSliceLoading(false);
       return;
     }
 
@@ -173,6 +215,7 @@ const VideoPlayer = ({ blobUrl }: VideoPlayerProps) => {
     const link = document.createElement("a");
     link.href = frameBlobUrl;
     link.download = `frame-${currentFrame}.png`;
+    setSliceLoading(false);
     link.click();
     URL.revokeObjectURL(frameBlobUrl);
   }
@@ -211,8 +254,8 @@ const VideoPlayer = ({ blobUrl }: VideoPlayerProps) => {
           <div className="timeline">
             <img className="preview-img" />
             <div className="thumb-indicator"></div>
-            {/* <div className="inpoint-indicator">I</div> */}
-            {/* <div className="outpoint-indicator">O</div> */}
+            <div className="inpoint-indicator">I</div>
+            <div className="outpoint-indicator">O</div>
           </div>
         </div>
         <div className="video-controls">
@@ -244,13 +287,14 @@ const VideoPlayer = ({ blobUrl }: VideoPlayerProps) => {
         <p>Inpoint: {convertPointToNumber(inpoint)}</p>
         <p>Outpoint: {convertPointToNumber(outpoint)}</p>
         <button
-          className="bg-black px-4 py-2 rounded-sm text-white font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
-          onClick={downloadFrame}
+          className="bg-black px-4 block py-2 rounded-sm text-white font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
+          onClick={downloadCurrentFrame}
+          disabled={sliceLoading}
         >
           Download current Frame
         </button>
         <button
-          className="bg-black px-4 py-2 rounded-sm text-white font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
+          className="bg-black px-4 block py-2 rounded-sm text-white font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
           onClick={downloadSlice}
           disabled={sliceLoading}
         >

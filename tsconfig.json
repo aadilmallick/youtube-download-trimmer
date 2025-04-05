@@ -20,10 +20,5 @@
       "bun-types" // add Bun global
     ]
   },
-  "include": [
-    "api/**/*.ts,tsx",
-    "routes/**/*.ts,tsx",
-    "testing/**/*.ts,tsx",
-    "index.ts"
-  ]
+  "include": ["api/*.ts", "routes/*.ts", "testing/*.ts", "index.ts"]
 }
