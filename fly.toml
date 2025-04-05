@@ -16,6 +16,12 @@ primary_region = 'mad'
   min_machines_running = 0
   processes = ['app']
 
+[env]
+  SERVER_MODE = production
+  PORT = 8080
+  VITE_API_URL_DEV = http://localhost:8080
+  VITE_API_URL_PRODUCTION = https://youtube-download-trimmer.fly.dev
+
 [[vm]]
   memory = '1gb'
   cpu_kind = 'shared'
