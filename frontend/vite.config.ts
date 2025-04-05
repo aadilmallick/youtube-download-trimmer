@@ -1,4 +1,4 @@
-import { defineConfig, loadEnv } from "vite";
+import { defineConfig, loadEnv, ProxyOptions } from "vite";
 import react from "@vitejs/plugin-react";
 
 const env = loadEnv("development", "../", "");
@@ -11,6 +11,16 @@ const target =
     ? env.VITE_API_URL_DEV
     : env.VITE_API_URL_PRODUCTION;
 
+const obj = target
+  ? {
+      "/api": {
+        changeOrigin: true,
+        secure: false,
+        target,
+      },
+    }
+  : {};
+
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [react()],
@@ -19,11 +29,7 @@ export default defineConfig({
   },
   server: {
     proxy: {
-      "/api": {
-        changeOrigin: true,
-        secure: false,
-        target,
-      },
+      ...(obj as Record<string, string | ProxyOptions>),
     },
     host: true, // Listen on all addresses, including the container's network
     port: 5179, // Default Vite port
