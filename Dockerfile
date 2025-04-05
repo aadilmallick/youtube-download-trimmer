@@ -34,7 +34,7 @@ RUN npm install --prefix frontend
 # EXPOSE 3000
 # CMD ["bun", "start"]
 
-FROM builder as production
+# FROM builder as production
 
 # 6. run app
 EXPOSE 8080
