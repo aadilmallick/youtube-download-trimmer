@@ -29,15 +29,15 @@ RUN bun install
 COPY . .
 RUN npm install --prefix frontend
 
-FROM builder as development
-# 6. run app
-EXPOSE 3000
-CMD ["bun", "start"]
+# FROM builder as development
+# # 6. run app
+# EXPOSE 3000
+# CMD ["bun", "start"]
 
 FROM builder as production
 
 # 6. run app
-EXPOSE 80
+EXPOSE 8080
 CMD ["bun", "start"]
 
 
