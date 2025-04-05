@@ -22,7 +22,7 @@ RUN apk -U add yt-dlp
 # 4. install dependencies
 WORKDIR /usr/src/app
 COPY package*.json ./
-COPY bun.lockb ./
+COPY bun.lock ./
 RUN bun install
 
 # 5. copy app code, install frontend dependencies.
