@@ -17,7 +17,7 @@
   },
   "scripts": {
     "start": "cd frontend && npm run build && cd .. && bun run index.ts",
-    "dev": "concurrently \"bun run --watch index.ts\" \"cd frontend && npm run dev \"",
+    "dev": "concurrently \"bun run --env-file=.env --watch index.ts\" \"cd frontend && npm run dev \"",
     "start-dev": "cd frontend && npm run build && cd .. && bun --env-file=.env.local run index.ts"
   }
 }

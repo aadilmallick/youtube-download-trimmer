@@ -5,6 +5,9 @@ import { toast } from "react-toastify";
 import PlaybackSpeedControls from "./PlaybackSpeedControls";
 import VideoPlayerModel from "./VideoPlayerModel";
 import { useApplicationStore } from "../context/useApplication";
+import ImageConverter from "../lib/ImageConverter";
+import { OPFS, FileSystemManager } from "../lib/OPFS";
+import { BlobDownloader } from "../lib/BlobDownloader";
 
 export class CSSVariablesManager<
   T extends Record<string, string | number> = Record<string, string>
@@ -50,6 +53,8 @@ const VideoPlayer = ({ blobUrl }: VideoPlayerProps) => {
   const [outpoint, setOutpoint] = React.useState(-1);
   const [sliceLoading, setSliceLoading] = React.useState(false);
   const [speed, setSpeed] = React.useState(1);
+  const [downloadDir, setDownloadDir] =
+    React.useState<FileSystemDirectoryHandle | null>(null);
   const { filePath } = useApplicationStore();
 
   function displayInpointOutpoint(inpoint: number, outpoint: number) {
@@ -202,6 +207,8 @@ const VideoPlayer = ({ blobUrl }: VideoPlayerProps) => {
       toast.error("Failed to get current time and frame rate");
       return;
     }
+    const currentFrame = getCurrentFrame(currentTime, frameRate);
+
     setSliceLoading(true);
     const blob = await Fetcher.downloadFrame(currentTime, filePath);
     if (!blob) {
@@ -210,14 +217,18 @@ const VideoPlayer = ({ blobUrl }: VideoPlayerProps) => {
       return;
     }
 
-    const currentFrame = getCurrentFrame(currentTime, frameRate);
-    const frameBlobUrl = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = frameBlobUrl;
-    link.download = `frame-${currentFrame}.png`;
+    const webpBlob = await ImageConverter.convertImage(blob, "webp");
+    if (downloadDir) {
+      await FileSystemManager.saveFile({
+        data: webpBlob,
+        name: `frame-${currentFrame}.webp`,
+        startIn: downloadDir,
+        types: [FileSystemManager.FileTypes.getImageFileTypes()],
+      });
+    } else {
+      ImageConverter.downloadBlob(webpBlob, `frame-${currentFrame}.webp`);
+    }
     setSliceLoading(false);
-    link.click();
-    URL.revokeObjectURL(frameBlobUrl);
   }
 
   const downloadSlice = async () => {
@@ -234,14 +245,33 @@ const VideoPlayer = ({ blobUrl }: VideoPlayerProps) => {
       return;
     }
 
-    const sliceBlobUrl = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = sliceBlobUrl;
-    link.download = "slice.mp4";
-    link.click();
-    URL.revokeObjectURL(sliceBlobUrl);
+    if (downloadDir) {
+      await FileSystemManager.saveFile({
+        data: blob,
+        name: `slice.mp4`,
+        startIn: downloadDir,
+        types: [FileSystemManager.FileTypes.getImageFileTypes()],
+      });
+    } else {
+      BlobDownloader.downloadBlob(blob, `slice.mp4`);
+    }
+
     setSliceLoading(false);
+    // const sliceBlobUrl = URL.createObjectURL(blob);
+    // const link = document.createElement("a");
+    // link.href = sliceBlobUrl;
+    // link.download = "slice.mp4";
+    // link.click();
+    // URL.revokeObjectURL(sliceBlobUrl);
   };
+
+  async function selectDownloadFolder() {
+    const dir = await FileSystemManager.openDirectory({
+      mode: "readwrite",
+      startIn: "videos",
+    });
+    setDownloadDir(dir);
+  }
 
   if (blobUrl === "") {
     return null;
@@ -286,6 +316,14 @@ const VideoPlayer = ({ blobUrl }: VideoPlayerProps) => {
       <div className="inpoint-outpoint-container space-y-4">
         <p>Inpoint: {convertPointToNumber(inpoint)}</p>
         <p>Outpoint: {convertPointToNumber(outpoint)}</p>
+        <div
+          className="bg-gray-300 p-2 border-gray-500 border-2"
+          onClick={selectDownloadFolder}
+        >
+          <p className="break-words text-wrap max-w-[75ch]">
+            Currently Selected Folder: {downloadDir?.name}
+          </p>
+        </div>
         <button
           className="bg-black px-4 block py-2 rounded-sm text-white font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
           onClick={downloadCurrentFrame}

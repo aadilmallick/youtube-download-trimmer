@@ -10,6 +10,7 @@ const target =
   env.SERVER_MODE === "development"
     ? env.VITE_API_URL_DEV
     : env.VITE_API_URL_PRODUCTION;
+console.log("target", target);
 
 const obj = target
   ? {
