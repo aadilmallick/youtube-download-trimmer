@@ -2,7 +2,7 @@ import { z } from "zod";
 import { zValidator } from "@hono/zod-validator";
 import { createMiddleware } from "hono/factory";
 
-const youtubeVideoRegex = /https:\/\/www\.youtube\.com\/watch\?v=\w+/;
+const youtubeVideoRegex = /https:\/\/www\.youtube\.com\/watch\?v=.{11}/;
 
 export const validateYoutubeUrl = zValidator(
   "json",
